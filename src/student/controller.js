@@ -4,6 +4,7 @@ import {
   getStudentByIdQuery,
   checkEmailExistsQuery,
   insertStudentQuery,
+  deleteStudentQuery,
 } from "./queries.js";
 
 export const getStudents = (req, res) => {
@@ -51,5 +52,31 @@ export const addStudent = (req, res) => {
         });
       }
     );
+  });
+};
+
+export const deleteStudent = (req, res) => {
+  const id = parseInt(req.params.id);
+  if (!id) {
+    return res.status(400).json({ error: "Invalid or missing ID parameter" });
+  }
+
+  // Check if student exists
+  pool.query(getStudentByIdQuery, [id], (error, results) => {
+    if (error) {
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    if (!results.rows.length) {
+      return res.status(404).json({ message: "Student does not exist" });
+    }
+
+    // If student exists, delete it
+    pool.query(deleteStudentQuery, [id], (error, results) => {
+      if (error) {
+        return res.status(500).json({ error: "Failed to delete student" });
+      }
+      res.status(200).json({ message: "Student removed successfully!" });
+    });
   });
 };
